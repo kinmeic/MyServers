@@ -1,0 +1,22 @@
+# pack-refs with: peeled fully-peeled sorted 
+a05e6bbe6b141ee68da3030e00275504c0595d4d refs/heads/citadel2
+f5e22a8fc911cb552e61f339c81a79fbd0ad83b9 refs/heads/feature/jo-usernames
+282f9b75d66fae85dd80bf900ff41c74060bb1e2 refs/heads/jo-rsa-private-keys
+a00502fa4f48f6c7b13639e97efd280189294fb5 refs/heads/jo-sanity-checks-missing-swiftformat
+ce71d29c844e11dc48c48c68f94ab8ebe2108acc refs/heads/jo-ssh-packet-limits
+546f78f45d299683ff2a0a25c9d2ee9ca9bf7b6e refs/heads/jo-unknown-global-requests
+eb4355b94c3acfef24b4623003eb37ffec08a5d9 refs/heads/main
+5181b30eeb832313e756dd31af2d9e71233e59e9 refs/heads/master
+5fce512197609f397d823f08593baa497a270114 refs/tags/0.0.1
+5760fccf453116606954f0ca21b9cfa25131d924 refs/tags/0.1.0
+e4623788946a4b9f34a01185f71c3debdfe25bf9 refs/tags/0.2.0
+b6bd90eb55df00e07e2d62be2492d2a0690a9a30 refs/tags/0.2.1
+2c03c37aaa9a883b2b41dfcb9aa8c1856cd17433 refs/tags/0.2.3
+d5fc603de485eca5a1e657361e3a8452875d108b refs/tags/0.3.0
+70506c0345480a9070ef71b58cff2b3f3e6a7662 refs/tags/0.3.1
+01e03b888734b03f1005b0ca329d7b5af50208e7 refs/tags/0.3.2
+0b3992e7acfdbf765aecd5e20bd8831d33d42453 refs/tags/0.3.3
+b93961a2988607a756cbc21a811f406f27aa9ab6 refs/tags/0.3.4
+791437a67f5394b13060314c778c0f63124803b1 refs/tags/0.3.5
+a05e6bbe6b141ee68da3030e00275504c0595d4d refs/tags/0.3.6
+c997b6b12b8ef51a9b50701d98e3fab250d9a044 refs/tags/0.4.0

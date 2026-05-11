@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/chenming/Downloads/MyServers/.build/x86_64-apple-macosx/debug/MyServersTests.build/master.swiftdeps"
+  },
+  "/Users/chenming/Downloads/MyServers/Tests/MyServersTests/MyServersTests.swift": {
+    "dependencies": "/Users/chenming/Downloads/MyServers/.build/x86_64-apple-macosx/debug/MyServersTests.build/MyServersTests.d",
+    "object": "/Users/chenming/Downloads/MyServers/.build/x86_64-apple-macosx/debug/MyServersTests.build/MyServersTests.swift.o",
+    "swiftmodule": "/Users/chenming/Downloads/MyServers/.build/x86_64-apple-macosx/debug/MyServersTests.build/MyServersTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/chenming/Downloads/MyServers/.build/x86_64-apple-macosx/debug/MyServersTests.build/MyServersTests.swiftdeps",
+    "diagnostics": "/Users/chenming/Downloads/MyServers/.build/x86_64-apple-macosx/debug/MyServersTests.build/MyServersTests.dia"
+  }
+}

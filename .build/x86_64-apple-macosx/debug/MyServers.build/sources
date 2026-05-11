@@ -1,0 +1,16 @@
+/Users/chenming/Downloads/MyServers/Sources/MyServers/App/AppState.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Core/History/HistoryTracker.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Core/SSH/SSHKeepAlive.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Core/SSH/SSHSession.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Core/Storage/KeychainManager.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Core/Terminal/TerminalBridge.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Core/Terminal/TerminalViewRepresentable.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Models/CommandHistory.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Models/ServerConfig.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Models/Session.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/MyServersApp.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Views/HistoryView.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Views/MainView.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Views/ServerFormView.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Views/SidebarView.swift
+/Users/chenming/Downloads/MyServers/Sources/MyServers/Views/TerminalContainerView.swift
