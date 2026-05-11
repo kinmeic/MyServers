@@ -43,8 +43,31 @@ struct TerminalContentView: View {
                 TerminalViewRepresentable(bridge: bridge)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ConnectionPlaceholder(state: session.state) {
-                    onConnect()
+                switch session.state {
+                case .connected:
+                    EmptyView()
+                case .connecting:
+                    EmptyTerminalView(
+                        icon: "arrow.triangle.2.circlepath",
+                        title: "正在建立连接...",
+                        message: "\(session.server.username)@\(session.server.host):\(session.server.port)"
+                    )
+                case .disconnected:
+                    EmptyTerminalView(
+                        icon: "server.rack",
+                        title: session.server.displayName,
+                        message: "已选择服务器，准备开始连接。",
+                        buttonTitle: "立即连接",
+                        action: onConnect
+                    )
+                case .error(let message):
+                    EmptyTerminalView(
+                        icon: "exclamationmark.triangle",
+                        title: "连接失败",
+                        message: message,
+                        buttonTitle: "重试",
+                        action: onConnect
+                    )
                 }
             }
         }
@@ -160,33 +183,3 @@ struct EmptyTerminalView: View {
     }
 }
 
-struct ConnectionPlaceholder: View {
-    let state: ConnectionState
-    let onConnect: () -> Void
-
-    var body: some View {
-        VStack(spacing: 16) {
-            switch state {
-            case .disconnected:
-                Button("连接", action: onConnect)
-                    .buttonStyle(.borderedProminent)
-            case .connecting:
-                ProgressView()
-                    .scaleEffect(1.5)
-                Text("正在建立连接...")
-                    .foregroundStyle(.secondary)
-            case .error(let message):
-                Image(systemName: "exclamationmark.triangle")
-                    .font(.largeTitle)
-                    .foregroundStyle(.orange)
-                Text(message)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                Button("重试", action: onConnect)
-            case .connected:
-                EmptyView()
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
