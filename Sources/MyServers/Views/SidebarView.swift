@@ -4,7 +4,7 @@ import SwiftData
 struct SidebarView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \ServerConfig.createdAt, order: .reverse) private var servers: [ServerConfig]
+    @Query(sort: \ServerConfig.sortOrder, order: .forward) private var servers: [ServerConfig]
     @Query(sort: \CommandRecord.timestamp, order: .reverse) private var allRecords: [CommandRecord]
     @State private var showAddSheet = false
     @State private var editingServer: ServerConfig?
@@ -35,7 +35,7 @@ struct SidebarView: View {
                             .foregroundStyle(.tertiary)
                     } else {
                         ForEach(activeServers) { server in
-                            ServerRow(server: server, isActive: true)
+                            ServerRow(server: server, isActive: true, pingResult: appState.pingService.results[server.id])
                                 .tag(server)
                                 .contextMenu {
                                     Button("断开连接") {
@@ -49,11 +49,14 @@ struct SidebarView: View {
                 if !inactiveServers.isEmpty {
                     Section("已保存") {
                         ForEach(inactiveServers) { server in
-                            ServerRow(server: server, isActive: false)
+                            ServerRow(server: server, isActive: false, pingResult: appState.pingService.results[server.id])
                                 .tag(server)
                                 .contextMenu {
                                     Button("连接") {
                                         appState.connect(to: server, modelContext: modelContext)
+                                    }
+                                    Button("检测延迟") {
+                                        appState.pingServer(server)
                                     }
                                     Button("编辑") {
                                         editingServer = server
@@ -101,6 +104,27 @@ struct SidebarView: View {
                     )
                 }
             }
+
+            // Reorder buttons
+            HStack(spacing: 0) {
+                Button(action: moveUp) {
+                    Image(systemName: "chevron.up")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .buttonStyle(.borderless)
+                .disabled(!canMoveUp)
+
+                Divider()
+
+                Button(action: moveDown) {
+                    Image(systemName: "chevron.down")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .buttonStyle(.borderless)
+                .disabled(!canMoveDown)
+            }
+            .frame(height: 28)
+            .background(Color(nsColor: .controlBackgroundColor))
         }
         .sheet(isPresented: $showAddSheet) {
             ServerFormView()
@@ -149,6 +173,44 @@ struct SidebarView: View {
             return true
         }
     }
+
+    // MARK: - Reorder
+
+    private var canMoveUp: Bool {
+        guard let selected = appState.selectedServer,
+              let index = inactiveServers.firstIndex(of: selected),
+              index > 0 else { return false }
+        return true
+    }
+
+    private var canMoveDown: Bool {
+        guard let selected = appState.selectedServer,
+              let index = inactiveServers.firstIndex(of: selected),
+              index < inactiveServers.count - 1 else { return false }
+        return true
+    }
+
+    private func moveUp() {
+        guard let selected = appState.selectedServer,
+              let index = inactiveServers.firstIndex(of: selected),
+              index > 0 else { return }
+        let above = inactiveServers[index - 1]
+        let tmp = above.sortOrder
+        above.sortOrder = selected.sortOrder
+        selected.sortOrder = tmp
+    }
+
+    private func moveDown() {
+        guard let selected = appState.selectedServer,
+              let index = inactiveServers.firstIndex(of: selected),
+              index < inactiveServers.count - 1 else { return }
+        let below = inactiveServers[index + 1]
+        let tmp = below.sortOrder
+        below.sortOrder = selected.sortOrder
+        selected.sortOrder = tmp
+    }
+
+    // MARK: - Import/Export
 
     private func prepareExport() {
         let items = servers.map { server in
@@ -217,6 +279,10 @@ struct SidebarView: View {
     private func showStatus(_ message: String, isError: Bool = false) {
         importExportMessage = message
         importExportIsError = isError
+        Task {
+            try? await Task.sleep(for: .seconds(3))
+            self.importExportMessage = nil
+        }
     }
 
     private func replaceCommonCommands(for server: ServerConfig, with commands: [CommonCommandItem]) {
@@ -239,6 +305,7 @@ struct SidebarView: View {
 struct ServerRow: View {
     let server: ServerConfig
     let isActive: Bool
+    var pingResult: PingResult?
 
     var body: some View {
         HStack {
@@ -262,7 +329,18 @@ struct ServerRow: View {
 
             Spacer()
 
-            if isActive {
+            if let pingResult {
+                switch pingResult {
+                case .latency(let ms):
+                    Text(String(format: "%.0fms", ms))
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(ms < 100 ? .green : ms < 300 ? .orange : .red)
+                case .timeout:
+                    Text("超时")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.red)
+                }
+            } else if isActive {
                 Text("在线")
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.green)

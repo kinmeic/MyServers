@@ -19,6 +19,8 @@ final class AppState {
     var historyPanelWidth: CGFloat = 320
     var passwordPrompt: PasswordPromptRequest?
 
+    let pingService = PingService()
+
     private var transientPasswords: [UUID: String] = [:]
 
     func session(for server: ServerConfig) -> Session? {
@@ -47,6 +49,9 @@ final class AppState {
             if let password, !password.isEmpty {
                 Task {
                     await session.connect(using: password)
+                    if session.state == .connected {
+                        refreshPingTimer()
+                    }
                 }
             } else {
                 passwordPrompt = PasswordPromptRequest(
@@ -84,9 +89,29 @@ final class AppState {
         Task {
             await activeSessions[serverId]?.disconnect()
             activeSessions.removeValue(forKey: serverId)
+            pingService.results.removeValue(forKey: serverId)
             if currentSession?.server.id == serverId {
                 currentSession = activeSessions.values.first
                 selectedServer = currentSession?.server
+            }
+            refreshPingTimer()
+        }
+    }
+
+    func pingServer(_ server: ServerConfig) {
+        Task {
+            let result = await pingService.ping(host: server.host, port: server.port)
+            pingService.results[server.id] = result
+        }
+    }
+
+    func refreshPingTimer() {
+        let connected = activeSessions.values.filter { $0.state == .connected }
+        if connected.isEmpty {
+            pingService.stopTimer()
+        } else {
+            pingService.startTimer {
+                connected.map { ($0.server.id, $0.server.host, $0.server.port) }
             }
         }
     }
