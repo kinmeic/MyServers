@@ -25,6 +25,7 @@ struct TerminalContentView: View {
             if let bridge = session.terminalView {
                 TerminalViewRepresentable(bridge: bridge)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(8)
             } else {
                 ConnectionPlaceholder(state: session.state) {
                     Task { await session.connect() }

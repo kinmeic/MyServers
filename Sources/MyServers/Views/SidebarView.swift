@@ -30,7 +30,7 @@ struct SidebarView: View {
                         .tag(server)
                         .contextMenu {
                             Button("Connect") {
-                                appState.activateSession(for: server)
+                                appState.activateSession(for: server, modelContext: modelContext)
                             }
                             Button("Edit") {
                                 editingServer = server
@@ -49,11 +49,6 @@ struct SidebarView: View {
             ToolbarItem {
                 Button(action: { showAddSheet = true }) {
                     Image(systemName: "plus")
-                }
-            }
-            ToolbarItem {
-                Button(action: toggleSidebar) {
-                    Image(systemName: "sidebar.left")
                 }
             }
             ToolbarItem {
@@ -78,11 +73,6 @@ struct SidebarView: View {
         servers.filter { appState.activeSessions[$0.id] == nil }
     }
 
-    private func toggleSidebar() {
-        withAnimation {
-            appState.columnVisibility = (appState.columnVisibility == .all) ? .detailOnly : .all
-        }
-    }
 }
 
 struct ServerRow: View {

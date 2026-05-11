@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import Combine
 
 @MainActor
@@ -14,9 +15,9 @@ final class AppState {
         activeSessions[server.id]
     }
 
-    func activateSession(for server: ServerConfig) {
+    func activateSession(for server: ServerConfig, modelContext: ModelContext) {
         if activeSessions[server.id] == nil {
-            activeSessions[server.id] = Session(server: server)
+            activeSessions[server.id] = Session(server: server, modelContext: modelContext)
         }
         currentSession = activeSessions[server.id]
         selectedServer = server
@@ -26,10 +27,7 @@ final class AppState {
         Task {
             await activeSessions[serverId]?.disconnect()
             activeSessions.removeValue(forKey: serverId)
-            if selectedServer?.id == serverId {
-                selectedServer = nil
-                currentSession = nil
-            }
+            currentSession = nil
         }
     }
 }

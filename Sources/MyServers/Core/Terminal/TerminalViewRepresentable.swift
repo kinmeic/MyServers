@@ -6,11 +6,23 @@ import SwiftTerm
 struct TerminalViewRepresentable: NSViewRepresentable {
     let bridge: TerminalBridge
 
-    func makeNSView(context: Context) -> TerminalView {
-        let terminal = TerminalView()
-        bridge.attach(to: terminal)
-        return terminal
+    func makeNSView(context: Context) -> NSView {
+        let container = NSView()
+        container.wantsLayer = true
+        swapTerminalView(in: container)
+        return container
     }
 
-    func updateNSView(_ nsView: TerminalView, context: Context) {}
+    func updateNSView(_ nsView: NSView, context: Context) {
+        // Remove existing terminal subviews and add the correct one
+        swapTerminalView(in: nsView)
+    }
+
+    private func swapTerminalView(in container: NSView) {
+        container.subviews.forEach { $0.removeFromSuperview() }
+        let terminal = bridge.makeView()
+        terminal.frame = container.bounds
+        terminal.autoresizingMask = [.width, .height]
+        container.addSubview(terminal)
+    }
 }

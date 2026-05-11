@@ -7,7 +7,12 @@ struct HistoryView: View {
 
     private var records: [CommandRecord] {
         guard let serverId = appState.selectedServer?.id else { return [] }
-        return allRecords.filter { $0.serverId == serverId }
+        return allRecords.filter { $0.serverId == serverId }.sorted {
+            if $0.isPinned != $1.isPinned {
+                return $0.isPinned && !$1.isPinned
+            }
+            return $0.timestamp > $1.timestamp
+        }
     }
 
     var body: some View {
@@ -19,21 +24,6 @@ struct HistoryView: View {
             }
         }
         .navigationTitle("History")
-        .toolbar {
-            ToolbarItem {
-                if !records.isEmpty {
-                    Button(action: clearHistory) {
-                        Image(systemName: "trash")
-                    }
-                }
-            }
-        }
-    }
-
-    private func clearHistory() {
-        for record in records {
-            // Access modelContext through environment if needed
-        }
     }
 }
 
@@ -52,34 +42,46 @@ struct HistoryRow: View {
     let record: CommandRecord
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(record.command)
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                    .lineLimit(2)
-                Spacer()
+        HStack(alignment: .top, spacing: 6) {
+            Button(action: { record.isPinned.toggle() }) {
+                Image(systemName: record.isPinned ? "pin.fill" : "pin")
+                    .font(.system(size: 10))
+                    .foregroundStyle(record.isPinned ? .blue : .secondary)
             }
+            .buttonStyle(.plain)
 
-            HStack {
-                Text(record.timestamp, style: .time)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-
-                if let duration = record.duration {
-                    Text(String(format: "%.2fs", duration))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text(record.command)
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .lineLimit(2)
+                    Spacer()
                 }
 
-                if let exitCode = record.exitCode {
-                    Text("exit \(exitCode)")
+                HStack {
+                    Text(record.timestamp, style: .time)
                         .font(.caption2)
-                        .foregroundStyle(exitCode == 0 ? .green : .red)
+                        .foregroundStyle(.secondary)
+
+                    if let duration = record.duration {
+                        Text(String(format: "%.2fs", duration))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if let exitCode = record.exitCode {
+                        Text("exit \(exitCode)")
+                            .font(.caption2)
+                            .foregroundStyle(exitCode == 0 ? .green : .red)
+                    }
                 }
             }
         }
         .padding(.vertical, 4)
         .contextMenu {
+            Button(record.isPinned ? "Unpin" : "Pin to top") {
+                record.isPinned.toggle()
+            }
             Button("Copy command") {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(record.command, forType: .string)

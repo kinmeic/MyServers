@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 
 enum ConnectionState: Equatable {
     case disconnected
@@ -18,10 +19,21 @@ final class Session {
     var history: [CommandRecord] = []
 
     private var sshSession: SSHSession?
+    private let modelContext: ModelContext
 
-    init(server: ServerConfig) {
+    init(server: ServerConfig, modelContext: ModelContext) {
         self.id = server.id
         self.server = server
+        self.modelContext = modelContext
+
+        let serverId = server.id
+        var descriptor = FetchDescriptor<CommandRecord>(
+            predicate: #Predicate { $0.serverId == serverId }
+        )
+        descriptor.sortBy = [SortDescriptor(\.timestamp, order: .reverse)]
+        if let existing = try? modelContext.fetch(descriptor) {
+            self.history = existing
+        }
     }
 
     func connect() async {
@@ -46,7 +58,11 @@ final class Session {
 
             try await session.connect()
 
-            self.terminalView = TerminalBridge(session: session)
+            let bridge = TerminalBridge(session: session)
+            bridge.onCommandEntered = { [weak self] command in
+                self?.recordCommand(command)
+            }
+            self.terminalView = bridge
             state = .connected
             lastActivity = Date()
             server.lastConnectedAt = Date()
@@ -83,5 +99,11 @@ final class Session {
             output: output
         )
         history.append(record)
+        modelContext.insert(record)
+        do {
+            try modelContext.save()
+        } catch {
+            print("[Session] Failed to save command history: \(error)")
+        }
     }
 }

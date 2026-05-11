@@ -9,18 +9,30 @@ import SwiftTerm
 @Observable
 final class TerminalBridge: @unchecked Sendable {
     private let session: SSHSession
-    private weak var terminalView: TerminalView?
+    private var terminalView: TerminalView?
+    private var commandBuffer: String = ""
+    var onCommandEntered: ((String) -> Void)?
 
     init(session: SSHSession) {
         self.session = session
     }
 
+    /// Return an existing TerminalView or create and wire one.
     @MainActor
-    func attach(to view: TerminalView) {
-        self.terminalView = view
+    func makeView() -> TerminalView {
+        if let tv = terminalView {
+            return tv
+        }
+        let tv = TerminalView()
+        terminalView = tv
+        attach(to: tv)
+        return tv
+    }
+
+    @MainActor
+    private func attach(to view: TerminalView) {
         view.terminalDelegate = self
 
-        // Wire SSH output → terminal
         Task {
             await session.setDataHandler { [weak self] data in
                 guard let self else { return }
@@ -32,10 +44,37 @@ final class TerminalBridge: @unchecked Sendable {
         }
     }
 
-    /// Forward keystrokes to SSH session.
+    /// Forward keystrokes to SSH session and buffer command input.
     private nonisolated func send(_ data: ArraySlice<UInt8>) {
-        Task {
-            await session.send(Data(data))
+        let bytes = Array(data)
+        Task { @MainActor in
+            await session.send(Data(bytes))
+            self.processInput(bytes)
+        }
+    }
+
+    @MainActor
+    private func processInput(_ bytes: [UInt8]) {
+        for byte in bytes {
+            switch byte {
+            case 0x0D: // Enter / Return
+                let command = commandBuffer
+                commandBuffer = ""
+                if !command.isEmpty {
+                    onCommandEntered?(command)
+                }
+            case 0x7F: // Backspace
+                if !commandBuffer.isEmpty {
+                    commandBuffer.removeLast()
+                }
+            case 0x1B: // Escape — skip simple escape sequences
+                continue
+            default:
+                // Capture printable ASCII only
+                if byte >= 0x20 && byte <= 0x7E {
+                    commandBuffer += String(UnicodeScalar(byte))
+                }
+            }
         }
     }
 }
