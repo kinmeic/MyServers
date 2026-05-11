@@ -41,6 +41,7 @@ final class AppState {
         case .connected, .connecting:
             return
         case .disconnected, .error:
+            // Prefer in-memory password, then try Keychain
             let password = transientPasswords[server.id] ?? KeychainManager.getPassword(for: server.id)
 
             if let password, !password.isEmpty {
@@ -62,6 +63,7 @@ final class AppState {
               let session = activeSessions[request.id] else { return }
 
         transientPasswords[request.id] = password
+        KeychainManager.savePassword(password, for: request.id)
         passwordPrompt = nil
 
         Task {
@@ -70,14 +72,22 @@ final class AppState {
     }
 
     func cancelPasswordPrompt() {
+        guard let request = passwordPrompt else { return }
         passwordPrompt = nil
+        activeSessions.removeValue(forKey: request.id)
+        if currentSession?.server.id == request.id {
+            currentSession = nil
+        }
     }
 
     func closeSession(for serverId: UUID) {
         Task {
             await activeSessions[serverId]?.disconnect()
             activeSessions.removeValue(forKey: serverId)
-            currentSession = nil
+            if currentSession?.server.id == serverId {
+                currentSession = activeSessions.values.first
+                selectedServer = currentSession?.server
+            }
         }
     }
 }

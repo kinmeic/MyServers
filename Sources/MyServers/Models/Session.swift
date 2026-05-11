@@ -57,6 +57,8 @@ final class Session {
             print("[Session] Connection failed: \(error)")
             let message = connectionErrorMessage(for: error)
             state = .error(message)
+            terminalView = nil
+            sshSession = nil
         }
     }
 

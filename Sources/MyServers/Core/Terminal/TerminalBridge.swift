@@ -61,6 +61,7 @@ final class TerminalBridge: @unchecked Sendable {
     func syncRemoteSizeToView() {
         guard let terminalView else { return }
         let terminal = terminalView.getTerminal()
+        guard terminal.cols >= 10, terminal.rows >= 3 else { return }
         Task {
             await session.resize(cols: terminal.cols, rows: terminal.rows)
         }

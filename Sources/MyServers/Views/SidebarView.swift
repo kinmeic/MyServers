@@ -29,8 +29,11 @@ struct SidebarView: View {
             }
 
             List(selection: $state.selectedServer) {
-                if !activeServers.isEmpty {
-                    Section("在线连接") {
+                Section("在线连接") {
+                    if activeServers.isEmpty {
+                        Text("无")
+                            .foregroundStyle(.tertiary)
+                    } else {
                         ForEach(activeServers) { server in
                             ServerRow(server: server, isActive: true)
                                 .tag(server)
@@ -48,13 +51,6 @@ struct SidebarView: View {
                         ForEach(inactiveServers) { server in
                             ServerRow(server: server, isActive: false)
                                 .tag(server)
-                                .contentShape(Rectangle())
-                                .simultaneousGesture(
-                                    TapGesture(count: 2)
-                                        .onEnded {
-                                            appState.connect(to: server, modelContext: modelContext)
-                                        }
-                                )
                                 .contextMenu {
                                     Button("连接") {
                                         appState.connect(to: server, modelContext: modelContext)
@@ -137,11 +133,21 @@ struct SidebarView: View {
     }
 
     private var activeServers: [ServerConfig] {
-        servers.filter { appState.activeSessions[$0.id] != nil }
+        servers.filter { server in
+            if let session = appState.activeSessions[server.id] {
+                return session.state == .connected
+            }
+            return false
+        }
     }
 
     private var inactiveServers: [ServerConfig] {
-        servers.filter { appState.activeSessions[$0.id] == nil }
+        servers.filter { server in
+            if let session = appState.activeSessions[server.id] {
+                return session.state != .connected
+            }
+            return true
+        }
     }
 
     private func prepareExport() {

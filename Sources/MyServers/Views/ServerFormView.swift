@@ -13,6 +13,7 @@ struct ServerFormView: View {
     @State private var password = ""
     @State private var authType: AuthType = .password
     @State private var showPassword = false
+    @State private var clearPassword = false
 
     init(server: ServerConfig? = nil) {
         self.server = server
@@ -80,11 +81,24 @@ struct ServerFormView: View {
                             }
                             .buttonStyle(.borderless)
                         }
+                        .disabled(clearPassword)
 
                         if server != nil {
-                            Text("密码留空则保留当前 Keychain 中的密码。")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            if hasSavedPassword && !clearPassword {
+                                Button("清除已保存的密码", role: .destructive) {
+                                    clearPassword = true
+                                    password = ""
+                                }
+                            }
+                            if clearPassword {
+                                Label("密码已标记为清除，保存后将移除。", systemImage: "trash")
+                                    .font(.caption)
+                                    .foregroundStyle(.orange)
+                            } else if password.isEmpty {
+                                Text("密码留空则保留已保存的密码。")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -122,6 +136,11 @@ struct ServerFormView: View {
         server == nil ? "密码" : "输入新密码"
     }
 
+    private var hasSavedPassword: Bool {
+        guard let server else { return false }
+        return KeychainManager.getPassword(for: server.id) != nil
+    }
+
     private func save() {
         let trimmedHost = host.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -136,9 +155,9 @@ struct ServerFormView: View {
             server.authType = authType
 
             if authType == .password {
-                if password.isEmpty {
-                    // Keep the existing Keychain password when editing.
-                } else {
+                if clearPassword {
+                    KeychainManager.deletePassword(for: server.id)
+                } else if !password.isEmpty {
                     KeychainManager.savePassword(password, for: server.id)
                 }
             } else {

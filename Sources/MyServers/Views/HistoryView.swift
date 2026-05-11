@@ -41,7 +41,7 @@ struct HistoryView: View {
             }
         }
         }
-        .navigationTitle("常用命令")
+        .navigationTitle("")
         .sheet(isPresented: $showAddSheet) {
             CommandEditorSheet { command in
                 addCommand(command)
@@ -82,18 +82,16 @@ private struct HistoryHeader: View {
 
 private struct CommonCommandList: View {
     let records: [CommandRecord]
+    @State private var selectedRecordID: UUID?
     let onInsert: (CommandRecord) -> Void
     let onEdit: (CommandRecord) -> Void
 
     var body: some View {
-        List {
+        List(selection: $selectedRecordID) {
             Section("常用命令") {
                 ForEach(records) { record in
                     CommonCommandRow(record: record)
-                        .contentShape(Rectangle())
-                        .onTapGesture(count: 2) {
-                            onInsert(record)
-                        }
+                        .tag(record.id)
                         .contextMenu {
                             Button("插入到终端") {
                                 onInsert(record)

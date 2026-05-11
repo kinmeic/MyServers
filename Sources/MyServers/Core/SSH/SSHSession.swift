@@ -1,7 +1,7 @@
 import Foundation
 @preconcurrency import Citadel
-import NIOCore
-import NIOSSH
+@preconcurrency import NIOCore
+@preconcurrency import NIOSSH
 
 /// Sendable configuration extracted from ServerConfig.
 struct SSHConnectionInfo: Sendable {
@@ -29,11 +29,11 @@ actor SSHSession {
 
     /// Establish SSH connection and open an interactive PTY shell.
     func connect() async throws {
-        print("[SSHSession] Connecting to \(info.host):\(info.port)")
+        print("[SSHSession] Connecting to \(info.host):\(info.port) user=\(info.username) password=\(info.password.isEmpty ? "<empty>" : "<\(info.password.count) chars>")")
         let settings = SSHClientSettings(
             host: info.host,
             port: info.port,
-            authenticationMethod: { [self] in .passwordBased(username: self.info.username, password: self.info.password) },
+            authenticationMethod: { .passwordBased(username: self.info.username, password: self.info.password) },
             hostKeyValidator: .acceptAnything()
         )
 
