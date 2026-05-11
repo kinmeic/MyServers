@@ -57,19 +57,24 @@ actor SSHSession {
         let disconnectHandler = onDisconnect
 
         connectionTask = Task {
-            try await client.withPTY(pty) { [weak self] (inbound: TTYOutput, outbound: TTYStdinWriter) in
-                self?.stdinWriter = outbound
+            do {
+                try await client.withPTY(pty) { [weak self] (inbound: TTYOutput, outbound: TTYStdinWriter) in
+                    self?.stdinWriter = outbound
 
-                for try await output in inbound {
-                    switch output {
-                    case .stdout(let buffer):
-                        let bytes = buffer.getBytes(at: 0, length: buffer.readableBytes) ?? []
-                        await self?.deliver(Data(bytes))
-                    case .stderr(let buffer):
-                        let bytes = buffer.getBytes(at: 0, length: buffer.readableBytes) ?? []
-                        await self?.deliver(Data(bytes))
+                    for try await output in inbound {
+                        switch output {
+                        case .stdout(let buffer):
+                            let bytes = buffer.getBytes(at: 0, length: buffer.readableBytes) ?? []
+                            await self?.deliver(Data(bytes))
+                        case .stderr(let buffer):
+                            let bytes = buffer.getBytes(at: 0, length: buffer.readableBytes) ?? []
+                            await self?.deliver(Data(bytes))
+                        }
                     }
                 }
+            } catch {
+                // Connection dropped (exit, reboot, shutdown, network error) — that's expected.
+                print("[SSHSession] Connection lost: \(error)")
             }
 
             await MainActor.run {
