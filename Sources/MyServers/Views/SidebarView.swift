@@ -106,24 +106,26 @@ struct SidebarView: View {
             }
 
             // Reorder buttons
-            HStack(spacing: 0) {
+            HStack {
+                Spacer()
                 Button(action: moveUp) {
                     Image(systemName: "chevron.up")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundStyle(canMoveUp ? .secondary : .quaternary)
                 }
                 .buttonStyle(.borderless)
                 .disabled(!canMoveUp)
 
-                Divider()
-
                 Button(action: moveDown) {
                     Image(systemName: "chevron.down")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundStyle(canMoveDown ? .secondary : .quaternary)
                 }
                 .buttonStyle(.borderless)
                 .disabled(!canMoveDown)
             }
-            .frame(height: 28)
+            .padding(.horizontal, 10)
+            .frame(height: 24)
             .background(Color(nsColor: .controlBackgroundColor))
         }
         .sheet(isPresented: $showAddSheet) {
@@ -179,34 +181,38 @@ struct SidebarView: View {
 
     // MARK: - Reorder
 
+    private func indexOfSelected(in list: [ServerConfig]) -> Int? {
+        guard let selected = appState.selectedServer else { return nil }
+        return list.firstIndex(where: { $0.id == selected.id })
+    }
+
     private var canMoveUp: Bool {
-        guard let selected = appState.selectedServer,
-              let index = inactiveServers.firstIndex(of: selected),
-              index > 0 else { return false }
+        guard let index = indexOfSelected(in: inactiveServers), index > 0 else { return false }
         return true
     }
 
     private var canMoveDown: Bool {
-        guard let selected = appState.selectedServer,
-              let index = inactiveServers.firstIndex(of: selected),
-              index < inactiveServers.count - 1 else { return false }
+        let list = inactiveServers
+        guard let index = indexOfSelected(in: list), index < list.count - 1 else { return false }
         return true
     }
 
     private func moveUp() {
-        guard let selected = appState.selectedServer,
-              let index = inactiveServers.firstIndex(of: selected),
-              index > 0 else { return }
-        let above = inactiveServers[index - 1]
-        selected.sortOrder = (above.sortOrder ?? 0) - 1
+        var list = inactiveServers
+        guard let index = indexOfSelected(in: list), index > 0 else { return }
+        list.swapAt(index, index - 1)
+        for (i, server) in list.enumerated() {
+            server.sortOrder = i
+        }
     }
 
     private func moveDown() {
-        guard let selected = appState.selectedServer,
-              let index = inactiveServers.firstIndex(of: selected),
-              index < inactiveServers.count - 1 else { return }
-        let below = inactiveServers[index + 1]
-        selected.sortOrder = (below.sortOrder ?? 0) + 1
+        var list = inactiveServers
+        guard let index = indexOfSelected(in: list), index < list.count - 1 else { return }
+        list.swapAt(index, index + 1)
+        for (i, server) in list.enumerated() {
+            server.sortOrder = i
+        }
     }
 
     // MARK: - Import/Export
@@ -319,11 +325,6 @@ struct ServerRow: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
 
-                if !isActive, let lastConnectedAt = server.lastConnectedAt {
-                    Text("最近连接：\(lastConnectedAt, style: .relative)前")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
             }
 
             Spacer()

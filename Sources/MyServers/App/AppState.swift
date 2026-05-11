@@ -110,9 +110,8 @@ final class AppState {
         if connected.isEmpty {
             pingService.stopTimer()
         } else {
-            pingService.startTimer {
-                connected.map { ($0.server.id, $0.server.host, $0.server.port) }
-            }
+            let targets = connected.map { ($0.server.id, $0.server.host, $0.server.port) }
+            pingService.startTimer { targets }
         }
     }
 }
