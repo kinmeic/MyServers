@@ -18,7 +18,13 @@ struct TerminalViewRepresentable: NSViewRepresentable {
     }
 
     private func swapTerminalView(in container: NSView) {
-        let terminal = bridge.makeView()
+        let targetFrame = NSRect(
+            x: contentInsets.left,
+            y: contentInsets.bottom,
+            width: max(0, container.bounds.width - contentInsets.left - contentInsets.right),
+            height: max(0, container.bounds.height - contentInsets.top - contentInsets.bottom)
+        )
+        let terminal = bridge.makeView(frame: targetFrame)
         if terminal.superview !== container {
             terminal.removeFromSuperview()
             container.subviews.forEach { $0.removeFromSuperview() }
@@ -29,14 +35,10 @@ struct TerminalViewRepresentable: NSViewRepresentable {
             container.hostedTerminalView = terminal
             container.layoutSubtreeIfNeeded()
         } else {
-            terminal.frame = NSRect(
-                x: contentInsets.left,
-                y: contentInsets.bottom,
-                width: max(0, container.bounds.width - contentInsets.left - contentInsets.right),
-                height: max(0, container.bounds.height - contentInsets.top - contentInsets.bottom)
-            )
+            terminal.frame = targetFrame
             terminal.autoresizingMask = [.width, .height]
         }
+        bridge.syncRemoteSizeToView()
     }
 }
 

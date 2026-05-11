@@ -48,9 +48,16 @@ struct SidebarView: View {
                         ForEach(inactiveServers) { server in
                             ServerRow(server: server, isActive: false)
                                 .tag(server)
+                                .contentShape(Rectangle())
+                                .simultaneousGesture(
+                                    TapGesture(count: 2)
+                                        .onEnded {
+                                            appState.connect(to: server, modelContext: modelContext)
+                                        }
+                                )
                                 .contextMenu {
                                     Button("连接") {
-                                        appState.activateSession(for: server, modelContext: modelContext)
+                                        appState.connect(to: server, modelContext: modelContext)
                                     }
                                     Button("编辑") {
                                         editingServer = server
@@ -98,10 +105,6 @@ struct SidebarView: View {
                     )
                 }
             }
-        }
-        .onChange(of: state.selectedServer) { _, server in
-            guard let server, appState.activeSessions[server.id] == nil else { return }
-            appState.activateSession(for: server, modelContext: modelContext)
         }
         .sheet(isPresented: $showAddSheet) {
             ServerFormView()

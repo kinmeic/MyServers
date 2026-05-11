@@ -8,7 +8,9 @@ struct TerminalContainerView: View {
         Group {
             if let server = appState.selectedServer,
                let session = appState.session(for: server) {
-                TerminalContentView(session: session)
+                TerminalContentView(session: session) {
+                    appState.connect(to: server, modelContext: modelContext)
+                }
             } else if let server = appState.selectedServer {
                 EmptyTerminalView(
                     icon: "server.rack",
@@ -16,7 +18,7 @@ struct TerminalContainerView: View {
                     message: "已选择服务器，准备开始连接。",
                     buttonTitle: "立即连接"
                 ) {
-                    appState.activateSession(for: server, modelContext: modelContext)
+                    appState.connect(to: server, modelContext: modelContext)
                 }
             } else {
                 EmptyTerminalView(
@@ -31,6 +33,7 @@ struct TerminalContainerView: View {
 
 struct TerminalContentView: View {
     let session: Session
+    let onConnect: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,16 +44,11 @@ struct TerminalContentView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ConnectionPlaceholder(state: session.state) {
-                    Task { await session.connect() }
+                    onConnect()
                 }
             }
         }
         .background(Color(nsColor: .textBackgroundColor))
-        .task {
-            if case .disconnected = session.state {
-                await session.connect()
-            }
-        }
     }
 }
 

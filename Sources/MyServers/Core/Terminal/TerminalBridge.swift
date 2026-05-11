@@ -17,11 +17,11 @@ final class TerminalBridge: @unchecked Sendable {
 
     /// Return an existing TerminalView or create and wire one.
     @MainActor
-    func makeView() -> TerminalView {
+    func makeView(frame: CGRect = .zero) -> TerminalView {
         if let tv = terminalView {
             return tv
         }
-        let tv = TerminalView()
+        let tv = TerminalView(frame: frame)
         terminalView = tv
         attach(to: tv)
         return tv
@@ -54,6 +54,15 @@ final class TerminalBridge: @unchecked Sendable {
     func insertCommand(_ command: String) {
         Task {
             await session.send(Data(command.utf8))
+        }
+    }
+
+    @MainActor
+    func syncRemoteSizeToView() {
+        guard let terminalView else { return }
+        let terminal = terminalView.getTerminal()
+        Task {
+            await session.resize(cols: terminal.cols, rows: terminal.rows)
         }
     }
 }

@@ -2,6 +2,8 @@ import SwiftUI
 
 struct MainView: View {
     @State private var appState = AppState()
+    @State private var promptPassword = ""
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         NavigationSplitView(columnVisibility: $appState.columnVisibility) {
@@ -32,6 +34,29 @@ struct MainView: View {
             }
         }
         .environment(appState)
+        .sheet(item: Binding(
+            get: { appState.passwordPrompt },
+            set: { request in
+                if request == nil {
+                    appState.cancelPasswordPrompt()
+                }
+            }
+        )) { request in
+            PasswordPromptSheet(
+                serverName: request.serverName,
+                hostSummary: request.hostSummary,
+                password: $promptPassword,
+                onCancel: {
+                    promptPassword = ""
+                    appState.cancelPasswordPrompt()
+                },
+                onSubmit: {
+                    let password = promptPassword
+                    promptPassword = ""
+                    appState.submitPassword(password)
+                }
+            )
+        }
     }
 }
 
@@ -62,5 +87,46 @@ private struct HistoryResizeHandle: View {
                     NSCursor.pop()
                 }
             }
+    }
+}
+
+private struct PasswordPromptSheet: View {
+    let serverName: String
+    let hostSummary: String
+    @Binding var password: String
+    let onCancel: () -> Void
+    let onSubmit: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("输入密码")
+                .font(.title3.weight(.semibold))
+
+            Text(serverName)
+                .font(.headline)
+            Text(hostSummary)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+
+            SecureField("密码", text: $password)
+                .textFieldStyle(.roundedBorder)
+
+            Text("本次打开 app 期间会临时记住这个密码；下次重新打开时需要重新输入。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Button("取消", role: .cancel, action: onCancel)
+                Spacer()
+                Button("连接") {
+                    guard !password.isEmpty else { return }
+                    onSubmit()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(password.isEmpty)
+            }
+        }
+        .padding(20)
+        .frame(width: 360)
     }
 }

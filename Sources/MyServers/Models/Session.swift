@@ -26,10 +26,9 @@ final class Session {
         self.modelContext = modelContext
     }
 
-    func connect() async {
+    func connect(using password: String) async {
         state = .connecting
         do {
-            let password = KeychainManager.getPassword(for: server.id) ?? ""
             print("[Session] Connecting to \(server.host):\(server.port) as \(server.username)")
             let info = SSHConnectionInfo(
                 host: server.host,
