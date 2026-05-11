@@ -5,6 +5,7 @@ build/
 *.xcworkspace
 DerivedData/
 .DS_Store
+**/.DS_Store
 *.swp
 *.swo
 *~
