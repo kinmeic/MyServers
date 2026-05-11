@@ -1,3 +1,0 @@
-module NIOWebSocket {
-    header "/Users/chenming/Downloads/MyServers/.build/x86_64-apple-macosx/debug/NIOWebSocket.build/include/NIOWebSocket-Swift.h"
-}

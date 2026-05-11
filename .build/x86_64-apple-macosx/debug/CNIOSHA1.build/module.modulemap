@@ -1,4 +1,0 @@
-module CNIOSHA1 {
-    umbrella header "/Users/chenming/Downloads/MyServers/.build/checkouts/swift-nio/Sources/CNIOSHA1/include/CNIOSHA1.h"
-    export *
-}
