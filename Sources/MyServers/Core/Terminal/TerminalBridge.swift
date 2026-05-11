@@ -10,8 +10,6 @@ import SwiftTerm
 final class TerminalBridge: @unchecked Sendable {
     private let session: SSHSession
     private var terminalView: TerminalView?
-    private var commandBuffer: String = ""
-    var onCommandEntered: ((String) -> Void)?
 
     init(session: SSHSession) {
         self.session = session
@@ -49,32 +47,13 @@ final class TerminalBridge: @unchecked Sendable {
         let bytes = Array(data)
         Task { @MainActor in
             await session.send(Data(bytes))
-            self.processInput(bytes)
         }
     }
 
     @MainActor
-    private func processInput(_ bytes: [UInt8]) {
-        for byte in bytes {
-            switch byte {
-            case 0x0D: // Enter / Return
-                let command = commandBuffer
-                commandBuffer = ""
-                if !command.isEmpty {
-                    onCommandEntered?(command)
-                }
-            case 0x7F: // Backspace
-                if !commandBuffer.isEmpty {
-                    commandBuffer.removeLast()
-                }
-            case 0x1B: // Escape — skip simple escape sequences
-                continue
-            default:
-                // Capture printable ASCII only
-                if byte >= 0x20 && byte <= 0x7E {
-                    commandBuffer += String(UnicodeScalar(byte))
-                }
-            }
+    func insertCommand(_ command: String) {
+        Task {
+            await session.send(Data(command.utf8))
         }
     }
 }

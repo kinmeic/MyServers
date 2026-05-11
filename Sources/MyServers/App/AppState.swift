@@ -9,7 +9,8 @@ final class AppState {
     var activeSessions: [UUID: Session] = [:]
     var currentSession: Session?
     var columnVisibility: NavigationSplitViewVisibility = .all
-    var showHistory: Bool = true
+    var showHistory: Bool = false
+    var historyPanelWidth: CGFloat = 320
 
     func session(for server: ServerConfig) -> Session? {
         activeSessions[server.id]

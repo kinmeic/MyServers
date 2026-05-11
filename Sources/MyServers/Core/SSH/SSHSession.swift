@@ -88,8 +88,9 @@ actor SSHSession {
 
     /// Resize the remote PTY.
     func resize(cols: Int, rows: Int) async {
-        // Citadel's withPTY does not expose dynamic resize yet.
-        // When supported, send SSHChannelRequestEvent.WindowChangeRequest here.
+        let writer = stdinWriter
+        guard let writer, cols > 0, rows > 0 else { return }
+        try? await writer.changeSize(cols: cols, rows: rows, pixelWidth: 0, pixelHeight: 0)
     }
 
     /// Close the SSH connection and cancel the background read loop.
