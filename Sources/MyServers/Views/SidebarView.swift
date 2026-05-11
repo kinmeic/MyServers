@@ -4,7 +4,7 @@ import SwiftData
 struct SidebarView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \ServerConfig.sortOrder, order: .forward) private var servers: [ServerConfig]
+    @Query(sort: \ServerConfig.createdAt, order: .reverse) private var servers: [ServerConfig]
     @Query(sort: \CommandRecord.timestamp, order: .reverse) private var allRecords: [CommandRecord]
     @State private var showAddSheet = false
     @State private var editingServer: ServerConfig?
@@ -172,6 +172,9 @@ struct SidebarView: View {
             }
             return true
         }
+        .sorted { a, b in
+            (a.sortOrder ?? Int.max) < (b.sortOrder ?? Int.max)
+        }
     }
 
     // MARK: - Reorder
@@ -195,9 +198,7 @@ struct SidebarView: View {
               let index = inactiveServers.firstIndex(of: selected),
               index > 0 else { return }
         let above = inactiveServers[index - 1]
-        let tmp = above.sortOrder
-        above.sortOrder = selected.sortOrder
-        selected.sortOrder = tmp
+        selected.sortOrder = (above.sortOrder ?? 0) - 1
     }
 
     private func moveDown() {
@@ -205,9 +206,7 @@ struct SidebarView: View {
               let index = inactiveServers.firstIndex(of: selected),
               index < inactiveServers.count - 1 else { return }
         let below = inactiveServers[index + 1]
-        let tmp = below.sortOrder
-        below.sortOrder = selected.sortOrder
-        selected.sortOrder = tmp
+        selected.sortOrder = (below.sortOrder ?? 0) + 1
     }
 
     // MARK: - Import/Export

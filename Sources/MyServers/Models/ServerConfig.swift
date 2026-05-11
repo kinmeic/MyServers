@@ -19,7 +19,7 @@ final class ServerConfig {
     var createdAt: Date
     var lastConnectedAt: Date?
     var tags: [String]
-    var sortOrder: Int
+    var sortOrder: Int?
 
     var authType: AuthType {
         get { AuthType(rawValue: authTypeRaw) ?? .password }
@@ -45,7 +45,6 @@ final class ServerConfig {
         self.keyIdentifier = keyIdentifier
         self.createdAt = Date()
         self.tags = tags
-        self.sortOrder = 0
     }
 
     var displayName: String { name.isEmpty ? host : name }
