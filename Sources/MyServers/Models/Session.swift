@@ -41,6 +41,7 @@ final class Session {
 
             await session.setDisconnectHandler { [weak self] in
                 Task { @MainActor in
+                    self?.terminalView = nil
                     self?.state = .disconnected
                 }
             }
